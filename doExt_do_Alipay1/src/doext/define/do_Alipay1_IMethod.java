@@ -9,4 +9,5 @@ import core.interfaces.DoIScriptEngine;
  */
 public interface do_Alipay1_IMethod {
 	void pay(JSONObject _dictParas,DoIScriptEngine _scriptEngine, String _callbackFuncName) throws Exception ;
+	void auth(JSONObject _dictParas,DoIScriptEngine _scriptEngine, String _callbackFuncName) throws Exception ;
 }

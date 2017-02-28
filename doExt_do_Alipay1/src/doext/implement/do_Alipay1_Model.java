@@ -1,17 +1,14 @@
 package doext.implement;
 
 import java.util.Map;
-
 import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-
+import com.alipay.sdk.app.AuthTask;
 import com.alipay.sdk.app.PayTask;
-
 import core.DoServiceContainer;
 import core.helper.DoJsonHelper;
 import core.interfaces.DoIScriptEngine;
@@ -129,6 +126,11 @@ public class do_Alipay1_Model extends DoSingletonModule implements do_Alipay1_IM
 			this.pay(_dictParas, _scriptEngine, _callbackFuncName);
 			return true;
 		}
+
+		if ("auth".equals(_methodName)) {
+			this.auth(_dictParas, _scriptEngine, _callbackFuncName);
+			return true;
+		}
 		return super.invokeAsyncMethod(_methodName, _dictParas, _scriptEngine, _callbackFuncName);
 	}
 
@@ -162,5 +164,34 @@ public class do_Alipay1_Model extends DoSingletonModule implements do_Alipay1_IM
 		// 必须异步调用
 		Thread payThread = new Thread(payRunnable);
 		payThread.start();
+	}
+
+	@Override
+	public void auth(JSONObject _dictParas, DoIScriptEngine _scriptEngine, String _callbackFuncName) throws Exception {
+		final String _authInfo = DoJsonHelper.getString(_dictParas, "authInfo", "");// authInfo
+		if (TextUtils.isEmpty(_authInfo))
+			throw new Exception("authInfo 不能为空");
+		final Activity _activity = DoServiceContainer.getPageViewFactory().getAppContext();
+		this.scriptEngine = _scriptEngine;
+		this.callbackFuncName = _callbackFuncName;
+		Runnable authRunnable = new Runnable() {
+
+			@Override
+			public void run() {
+				// 构造AuthTask 对象
+				AuthTask authTask = new AuthTask(_activity);
+				// 调用授权接口，获取授权结果
+				Map<String, String> result = authTask.authV2(_authInfo, true);
+
+				Message msg = new Message();
+				msg.what = SDK_AUTH_FLAG;
+				msg.obj = result;
+				mHandler.sendMessage(msg);
+			}
+		};
+
+		// 必须异步调用
+		Thread authThread = new Thread(authRunnable);
+		authThread.start();
 	}
 }
